@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+
+  fuji:
+    build: ./fuji
+    environment:
+      - ENABLE_CORS=true
+    ports:
+      - "1071:1071"   
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.0-flash}
+
+      - FUJI_API_URL=http://fuji:1071/fuji/api/v1/evaluate
+      - FUJI_USER=${FUJI_USER:-marvel}
+      - FUJI_PASSWORD=${FUJI_PASSWORD:-wonderwoman}
+      - KGHEARTBEAT_API_URL=${KGHEARTBEAT_API_URL:-}
+      - FRONTEND_ORIGINS=${FRONTEND_ORIGINS:-}
+    depends_on:
+      - fuji
+    ports:
+      - "8000:8000"  
+    volumes:
+
+
+      - snapshots_data:/app/data/snapshots
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"       
+    restart: unless-stopped
+
+volumes:
+  snapshots_data:
